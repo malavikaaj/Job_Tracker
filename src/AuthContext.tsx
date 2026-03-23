@@ -4,8 +4,8 @@ import type { User } from './types';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, name: string) => void;
-  register: (email: string, name: string) => void;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -25,23 +25,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [user]);
 
-  const login = (email: string, name: string) => {
-    // In a real app, this would verify credentials with a backend
+  const login = async (email: string, password: string) => {
+    // In a real app, this would be a backend call
+    const users = JSON.parse(localStorage.getItem('job-tracker-registered-users') || '[]');
+    const existingUser = users.find((u: any) => u.email === email);
+
+    if (!existingUser) {
+      throw new Error('User not found. Please register first.');
+    }
+
+    if (existingUser.password !== password) {
+      throw new Error('Incorrect password. Please try again.');
+    }
+
     const loggedInUser: User = {
-      id: btoa(email), // Simple way to generate unique ID for demo
-      email,
-      name,
+      id: existingUser.id,
+      email: existingUser.email,
+      name: existingUser.name,
     };
     setUser(loggedInUser);
   };
 
-  const register = (email: string, name: string) => {
-    const newUser: User = {
+  const register = async (email: string, name: string, password: string) => {
+    const users = JSON.parse(localStorage.getItem('job-tracker-registered-users') || '[]');
+    
+    if (users.find((u: any) => u.email === email)) {
+      throw new Error('User already exists with this email.');
+    }
+
+    const newUser = {
       id: btoa(email),
       email,
       name,
+      password, // In a real app, never store passwords in plain text!
     };
-    setUser(newUser);
+
+    localStorage.setItem('job-tracker-registered-users', JSON.stringify([...users, newUser]));
+
+    const loggedInUser: User = {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+    };
+    setUser(loggedInUser);
   };
 
   const logout = () => {
