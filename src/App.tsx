@@ -23,25 +23,42 @@ function App() {
     if (user) {
       const storageKey = `job-applications-${user.id}`;
       const saved = localStorage.getItem(storageKey);
+      
       if (saved) {
         setApplications(JSON.parse(saved));
       } else {
-        // Default dummy data for new users
-        const defaultData: JobApplication[] = [
-          {
-            id: '1',
-            userId: user.id,
-            company: 'Google',
-            position: 'Frontend Engineer',
-            status: 'interviewing',
-            appliedDate: new Date().toISOString().split('T')[0],
-            location: 'Mountain View, CA',
-            salary: '$150k - $200k',
-            notes: 'Round 2 scheduled for next Tuesday.',
-            jobLink: 'https://google.com/jobs'
-          }
-        ];
-        setApplications(defaultData);
+        // Migration: Check if there's any data from the old "anonymous" key
+        const anonymousData = localStorage.getItem('job-applications');
+        if (anonymousData) {
+          const parsedData = JSON.parse(anonymousData);
+          // Link this data to the new user
+          const migratedData = parsedData.map((app: any) => ({
+            ...app,
+            userId: user.id
+          }));
+          setApplications(migratedData);
+          // Save to user key and remove old anonymous key
+          localStorage.setItem(storageKey, JSON.stringify(migratedData));
+          localStorage.removeItem('job-applications');
+        } else {
+          // Default dummy data for truly new users
+          const defaultData: JobApplication[] = [
+            {
+              id: '1',
+              userId: user.id,
+              company: 'Google',
+              position: 'Frontend Engineer',
+              status: 'interviewing',
+              appliedDate: new Date().toISOString().split('T')[0],
+              location: 'Mountain View, CA',
+              salary: '$150k - $200k',
+              notes: 'Round 2 scheduled for next Tuesday.',
+              jobLink: 'https://google.com/jobs',
+              category: 'Frontend'
+            }
+          ];
+          setApplications(defaultData);
+        }
       }
     } else {
       setApplications([]);
@@ -50,7 +67,7 @@ function App() {
 
   // Save applications whenever they change
   useEffect(() => {
-    if (user && applications.length > 0) {
+    if (user) {
       localStorage.setItem(`job-applications-${user.id}`, JSON.stringify(applications));
     }
   }, [applications, user]);
