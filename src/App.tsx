@@ -1,52 +1,65 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Briefcase, TrendingUp, CheckCircle, Clock, XCircle, BarChart3, Download } from 'lucide-react';
+import { Plus, Search, Briefcase, TrendingUp, CheckCircle, Clock, XCircle, BarChart3, Download, LogOut, User as UserIcon } from 'lucide-react';
 import type { JobApplication, ApplicationStatus } from './types';
 import { ApplicationCard } from './components/ApplicationCard';
 import { AddApplicationModal } from './components/AddApplicationModal';
+import { useAuth } from './AuthContext';
+import { AuthScreen } from './components/AuthScreen';
 
 function App() {
-  const [applications, setApplications] = useState<JobApplication[]>(() => {
-    const saved = localStorage.getItem('job-applications');
-    if (saved) return JSON.parse(saved);
-    
-    // Default dummy data for first-time users
-    return [
-      {
-        id: '1',
-        company: 'Google',
-        position: 'Frontend Engineer',
-        status: 'interviewing',
-        appliedDate: new Date().toISOString().split('T')[0],
-        location: 'Mountain View, CA',
-        salary: '$150k - $200k',
-        notes: 'Round 2 scheduled for next Tuesday.',
-        jobLink: 'https://google.com/jobs'
-      },
-      {
-        id: '2',
-        company: 'Meta',
-        position: 'Software Engineer',
-        status: 'applied',
-        appliedDate: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0],
-        location: 'Remote',
-        salary: '$160k - $210k',
-        jobLink: 'https://meta.com/careers'
-      }
-    ];
-  });
+  const { user, logout } = useAuth();
+  
+  // Local state for applications, initialized based on current user
+  const [applications, setApplications] = useState<JobApplication[]>([]);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
 
+  // Load user-specific applications from localStorage
   useEffect(() => {
-    localStorage.setItem('job-applications', JSON.stringify(applications));
-  }, [applications]);
+    if (user) {
+      const storageKey = `job-applications-${user.id}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        setApplications(JSON.parse(saved));
+      } else {
+        // Default dummy data for new users
+        const defaultData: JobApplication[] = [
+          {
+            id: '1',
+            userId: user.id,
+            company: 'Google',
+            position: 'Frontend Engineer',
+            status: 'interviewing',
+            appliedDate: new Date().toISOString().split('T')[0],
+            location: 'Mountain View, CA',
+            salary: '$150k - $200k',
+            notes: 'Round 2 scheduled for next Tuesday.',
+            jobLink: 'https://google.com/jobs'
+          }
+        ];
+        setApplications(defaultData);
+      }
+    } else {
+      setApplications([]);
+    }
+  }, [user]);
 
-  const handleAddApplication = (newApp: Omit<JobApplication, 'id'>) => {
+  // Save applications whenever they change
+  useEffect(() => {
+    if (user && applications.length > 0) {
+      localStorage.setItem(`job-applications-${user.id}`, JSON.stringify(applications));
+    }
+  }, [applications, user]);
+
+  const handleAddApplication = (newApp: Omit<JobApplication, 'id' | 'userId'>) => {
+    if (!user) return;
     const application: JobApplication = {
       ...newApp,
       id: crypto.randomUUID(),
+      userId: user.id,
     };
     setApplications(prev => [application, ...prev]);
   };
@@ -118,6 +131,10 @@ function App() {
     { label: 'Rejected', value: stats.rejected, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
   ];
 
+  if (!user) {
+    return <AuthScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
@@ -129,30 +146,67 @@ function App() {
             </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">JobTracker</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={exportToCSV}
-              title="Export to Excel/Numbers"
-              className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
-            >
-              <Download size={18} />
-              <span className="hidden sm:inline">Export CSV</span>
-            </button>
-            <button
-              onClick={() => {
-                setEditingApplication(null);
-                setIsModalOpen(true);
-              }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-blue-200 transition-all active:scale-95"
-            >
-              <Plus size={18} />
-              Add Application
-            </button>
+          
+          <div className="flex items-center gap-4">
+            {/* Profile Section */}
+            <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                <UserIcon size={18} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-slate-900 leading-none">{user.name}</span>
+                <span className="text-[10px] text-slate-500">{user.email}</span>
+              </div>
+              <button 
+                onClick={logout}
+                className="ml-2 p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+                title="Logout"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportToCSV}
+                title="Export to Excel/Numbers"
+                className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
+              >
+                <Download size={18} />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+              <button
+                onClick={() => {
+                  setEditingApplication(null);
+                  setIsModalOpen(true);
+                }}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-blue-200 transition-all active:scale-95"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">Add New</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Mobile Profile (only shown on small screens) */}
+        <div className="md:hidden flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+              {user.name.charAt(0)}
+            </div>
+            <div>
+              <p className="font-bold text-slate-900">{user.name}</p>
+              <p className="text-xs text-slate-500">{user.email}</p>
+            </div>
+          </div>
+          <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500">
+            <LogOut size={20} />
+          </button>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {statCards.map((stat, i) => (
