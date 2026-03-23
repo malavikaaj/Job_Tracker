@@ -27,11 +27,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     // In a real app, this would be a backend call
+    const normalizedEmail = email.trim().toLowerCase();
     const users = JSON.parse(localStorage.getItem('job-tracker-registered-users') || '[]');
-    const existingUser = users.find((u: any) => u.email === email);
+    const existingUser = users.find((u: any) => u.email.trim().toLowerCase() === normalizedEmail);
 
     if (!existingUser) {
-      throw new Error('User not found. Please register first.');
+      throw new Error('No account found with this email. Please sign up first.');
     }
 
     if (existingUser.password !== password) {
@@ -47,17 +48,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const register = async (email: string, name: string, password: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
     const users = JSON.parse(localStorage.getItem('job-tracker-registered-users') || '[]');
     
-    if (users.find((u: any) => u.email === email)) {
-      throw new Error('User already exists with this email.');
+    if (users.find((u: any) => u.email.trim().toLowerCase() === normalizedEmail)) {
+      throw new Error('An account already exists with this email.');
     }
 
     const newUser = {
-      id: btoa(email),
-      email,
-      name,
-      password, // In a real app, never store passwords in plain text!
+      id: btoa(normalizedEmail),
+      email: normalizedEmail,
+      name: name.trim(),
+      password: password, // In a real app, never store passwords in plain text!
     };
 
     localStorage.setItem('job-tracker-registered-users', JSON.stringify([...users, newUser]));
@@ -71,6 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
+    localStorage.removeItem('job-tracker-user');
     setUser(null);
   };
 
