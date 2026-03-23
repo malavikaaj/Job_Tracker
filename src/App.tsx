@@ -1,13 +1,15 @@
-import { Plus, Search, Briefcase, TrendingUp, CheckCircle, Clock, XCircle, BarChart3, Download, LogOut, User as UserIcon, Upload } from 'lucide-react';
+import { Plus, Search, Briefcase, TrendingUp, CheckCircle, Clock, XCircle, BarChart3, Download, LogOut, User as UserIcon, Upload, Moon, Sun } from 'lucide-react';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { JobApplication, ApplicationStatus } from './types';
 import { ApplicationCard } from './components/ApplicationCard';
 import { AddApplicationModal } from './components/AddApplicationModal';
 import { useAuth } from './AuthContext';
+import { useTheme } from './ThemeContext';
 import { AuthScreen } from './components/AuthScreen';
 
 function App() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   
   // Local state for applications, initialized based on current user
   const [applications, setApplications] = useState<JobApplication[]>([]);
@@ -233,26 +235,35 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
+    <div className="min-h-screen bg-background dark:bg-slate-950 transition-colors">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-blue-600 p-2 rounded-xl">
               <BarChart3 className="text-white" size={24} />
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">JobTracker</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">JobTracker</h1>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+
             {/* Profile Section */}
-            <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-100">
-              <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+            <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+              <div className="w-8 h-8 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <UserIcon size={18} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-slate-900 leading-none">{user.name}</span>
-                <span className="text-[10px] text-slate-500">{user.email}</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white leading-none">{user.name}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">{user.email}</span>
               </div>
               <button 
                 onClick={logout}
@@ -274,7 +285,7 @@ function App() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 title="Import from CSV"
-                className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
+                className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
               >
                 <Upload size={18} />
                 <span className="hidden sm:inline">Import</span>
@@ -282,7 +293,7 @@ function App() {
               <button
                 onClick={exportToCSV}
                 title="Export to Excel/Numbers"
-                className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
+                className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
               >
                 <Download size={18} />
                 <span className="hidden sm:inline">Export</span>
@@ -292,7 +303,7 @@ function App() {
                   setEditingApplication(null);
                   setIsModalOpen(true);
                 }}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-blue-200 transition-all active:scale-95"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-semibold shadow-lg shadow-blue-200 dark:shadow-none transition-all active:scale-95"
               >
                 <Plus size={18} />
                 <span className="hidden sm:inline">Add New</span>
@@ -304,14 +315,14 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Mobile Profile (only shown on small screens) */}
-        <div className="md:hidden flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 mb-6">
+        <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
               {user.name.charAt(0)}
             </div>
             <div>
-              <p className="font-bold text-slate-900">{user.name}</p>
-              <p className="text-xs text-slate-500">{user.email}</p>
+              <p className="font-bold text-slate-900 dark:text-white">{user.name}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>
             </div>
           </div>
           <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500">
@@ -322,14 +333,14 @@ function App() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           {statCards.map((stat, i) => (
-            <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+            <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
               <div className="flex items-center justify-between mb-2">
-                <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
+                <div className={`${stat.bg} dark:bg-slate-800 ${stat.color} p-2 rounded-lg`}>
                   <stat.icon size={18} />
                 </div>
-                <span className="text-2xl font-bold text-slate-900">{stat.value}</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</span>
               </div>
-              <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -343,7 +354,7 @@ function App() {
               placeholder="Search companies or positions..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all shadow-sm"
+              className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 focus:border-blue-400 dark:focus:border-blue-600 outline-none transition-all shadow-sm text-slate-900 dark:text-white"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
@@ -353,8 +364,8 @@ function App() {
                 onClick={() => setStatusFilter(status as any)}
                 className={`px-5 py-3 rounded-2xl font-medium whitespace-nowrap transition-all ${
                   statusFilter === status
-                    ? 'bg-slate-900 text-white shadow-lg'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -379,12 +390,12 @@ function App() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-12 text-center">
-            <div className="bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Briefcase className="text-slate-300" size={32} />
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 p-12 text-center transition-colors">
+            <div className="bg-slate-50 dark:bg-slate-800 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Briefcase className="text-slate-300 dark:text-slate-600" size={32} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">No applications found</h3>
-            <p className="text-slate-500 max-w-xs mx-auto mb-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">No applications found</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mb-6">
               {searchTerm || statusFilter !== 'all' 
                 ? "Try adjusting your filters or search terms." 
                 : "Get started by adding your first job application!"}
@@ -392,7 +403,7 @@ function App() {
             {!searchTerm && statusFilter === 'all' && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-800 transition-all active:scale-95"
+                className="inline-flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-all active:scale-95"
               >
                 <Plus size={18} />
                 Add First Application
