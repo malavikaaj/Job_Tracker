@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
-import { LogIn, UserPlus, Mail, User as UserIcon, Lock } from 'lucide-react';
+import { useTheme } from '../ThemeContext';
+import { LogIn, UserPlus, Mail, User as UserIcon, Lock, Moon, Sun } from 'lucide-react';
 
 export const AuthScreen: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,6 +11,7 @@ export const AuthScreen: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +32,16 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors relative">
+      {/* Theme Toggle for Auth Screen */}
+      <button
+        onClick={toggleTheme}
+        className="absolute top-6 right-6 p-3 rounded-2xl bg-white dark:bg-slate-900 shadow-lg border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all z-10"
+        title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+      >
+        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+      </button>
+
       <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-xl shadow-slate-200 dark:shadow-none overflow-hidden border border-slate-100 dark:border-slate-800 transition-colors">
         <div className="bg-blue-600 p-8 text-white text-center">
           <h1 className="text-3xl font-bold mb-2">JobTracker</h1>
