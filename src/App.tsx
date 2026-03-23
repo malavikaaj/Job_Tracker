@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Briefcase, TrendingUp, CheckCircle, Clock, XCircle, BarChart3, Download, LogOut, User as UserIcon } from 'lucide-react';
+import { Plus, Search, Briefcase, TrendingUp, CheckCircle, Clock, XCircle, BarChart3, Download, LogOut, User as UserIcon, Upload } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { JobApplication, ApplicationStatus } from './types';
 import { ApplicationCard } from './components/ApplicationCard';
 import { AddApplicationModal } from './components/AddApplicationModal';
@@ -16,6 +16,7 @@ function App() {
   const [editingApplication, setEditingApplication] = useState<JobApplication | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load user-specific applications from localStorage
   useEffect(() => {
@@ -103,6 +104,84 @@ function App() {
     document.body.removeChild(link);
   };
 
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n');
+      const headers = lines[0].toLowerCase().split(',');
+      
+      const newApplications: JobApplication[] = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        
+        // Handle CSV parsing with quotes
+        const values: string[] = [];
+        let currentValue = '';
+        let inQuotes = false;
+        
+        for (let j = 0; j < lines[i].length; j++) {
+          const char = lines[i][j];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(currentValue.trim());
+            currentValue = '';
+          } else {
+            currentValue += char;
+          }
+        }
+        values.push(currentValue.trim());
+
+        const app: any = {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          appliedDate: new Date().toISOString().split('T')[0],
+          status: 'applied' as ApplicationStatus,
+        };
+
+        headers.forEach((header, index) => {
+          const value = values[index]?.replace(/^"|"$/g, '').replace(/""/g, '"');
+          if (!value) return;
+
+          if (header.includes('company')) app.company = value;
+          else if (header.includes('position')) app.position = value;
+          else if (header.includes('status')) {
+            const status = value.toLowerCase() as ApplicationStatus;
+            if (['applied', 'interviewing', 'offer', 'rejected', 'archived'].includes(status)) {
+              app.status = status;
+            }
+          }
+          else if (header.includes('date')) app.appliedDate = value;
+          else if (header.includes('link')) app.jobLink = value;
+          else if (header.includes('location')) app.location = value;
+          else if (header.includes('salary')) app.salary = value;
+          else if (header.includes('notes')) app.notes = value;
+        });
+
+        if (app.company && app.position) {
+          newApplications.push(app as JobApplication);
+        }
+      }
+
+      if (newApplications.length > 0) {
+        if (window.confirm(`Found ${newApplications.length} applications. Do you want to import them?`)) {
+          setApplications(prev => [...newApplications, ...prev]);
+        }
+      } else {
+        alert('No valid applications found in the CSV. Please ensure it has "Company" and "Position" columns.');
+      }
+      
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   const filteredApplications = useMemo(() => {
     return applications.filter(app => {
       const matchesSearch = 
@@ -167,6 +246,21 @@ function App() {
             </div>
 
             <div className="flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImportCSV}
+                accept=".csv"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                title="Import from CSV"
+                className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl font-semibold transition-all active:scale-95 shadow-sm"
+              >
+                <Upload size={18} />
+                <span className="hidden sm:inline">Import</span>
+              </button>
               <button
                 onClick={exportToCSV}
                 title="Export to Excel/Numbers"
