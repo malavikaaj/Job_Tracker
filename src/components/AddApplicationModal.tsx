@@ -5,12 +5,12 @@ import type { JobApplication, ApplicationStatus } from '../types';
 interface AddApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (application: Omit<JobApplication, 'id'>) => void;
+  onSave: (application: Omit<JobApplication, 'id' | 'userId'>) => void;
   onUpdate: (application: JobApplication) => void;
   editingApplication: JobApplication | null;
 }
 
-const initialFormState: Omit<JobApplication, 'id'> = {
+const initialFormState: Omit<JobApplication, 'id' | 'userId'> = {
   company: '',
   position: '',
   status: 'applied',
@@ -19,6 +19,7 @@ const initialFormState: Omit<JobApplication, 'id'> = {
   notes: '',
   location: '',
   salary: '',
+  category: '',
 };
 
 export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({ 
@@ -28,11 +29,11 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
   onUpdate,
   editingApplication 
 }) => {
-  const [formData, setFormData] = useState<Omit<JobApplication, 'id'>>(initialFormState);
+  const [formData, setFormData] = useState<Omit<JobApplication, 'id' | 'userId'>>(initialFormState);
 
   useEffect(() => {
     if (editingApplication) {
-      const { id, ...rest } = editingApplication;
+      const { id, userId, ...rest } = editingApplication;
       setFormData(rest);
     } else {
       setFormData(initialFormState);
@@ -44,7 +45,7 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingApplication) {
-      onUpdate({ ...formData, id: editingApplication.id });
+      onUpdate({ ...formData, id: editingApplication.id, userId: editingApplication.userId });
     } else {
       onSave(formData);
     }
@@ -157,6 +158,17 @@ export const AddApplicationModal: React.FC<AddApplicationModalProps> = ({
                 placeholder="$100k - $120k"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category / Tag</label>
+            <input
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+              placeholder="e.g. Frontend, Fullstack, Remote"
+            />
           </div>
 
           <div>

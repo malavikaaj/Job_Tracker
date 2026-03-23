@@ -1,8 +1,8 @@
 import React from 'react';
-import { Calendar, Link as LinkIcon, MapPin, Trash2, Edit2, DollarSign } from 'lucide-react';
+import { Calendar, Link as LinkIcon, MapPin, Trash2, Edit2, DollarSign, Tag, Clock } from 'lucide-react';
 import type { JobApplication } from '../types';
 import { StatusBadge } from './StatusBadge';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 
 interface ApplicationCardProps {
   application: JobApplication;
@@ -15,8 +15,18 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
   onDelete, 
   onEdit 
 }) => {
+  const daysSinceApplied = differenceInDays(new Date(), new Date(application.appliedDate));
+  const needsFollowUp = application.status === 'applied' && daysSinceApplied >= 7;
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-xl shadow-sm border ${needsFollowUp ? 'border-orange-200 ring-1 ring-orange-50' : 'border-gray-100'} p-5 hover:shadow-md transition-shadow relative overflow-hidden`}>
+      {needsFollowUp && (
+        <div className="absolute top-0 right-0 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center gap-1">
+          <Clock size={10} />
+          FOLLOW UP
+        </div>
+      )}
+      
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{application.position}</h3>
@@ -55,6 +65,13 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
           <div className="flex items-center text-sm text-gray-500 gap-2">
             <DollarSign size={14} />
             <span>{application.salary}</span>
+          </div>
+        )}
+
+        {application.category && (
+          <div className="flex items-center text-sm text-blue-600 gap-2 font-medium">
+            <Tag size={14} />
+            <span>{application.category}</span>
           </div>
         )}
       </div>

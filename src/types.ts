@@ -9,7 +9,7 @@ export type ApplicationStatus = 'applied' | 'interviewing' | 'offer' | 'rejected
 
 export interface JobApplication {
   id: string;
-  userId: string; // Added to link applications to a user
+  userId: string;
   company: string;
   position: string;
   status: ApplicationStatus;
@@ -18,4 +18,5 @@ export interface JobApplication {
   notes?: string;
   location?: string;
   salary?: string;
+  category?: string; // New: Category tag
 }

@@ -186,7 +186,8 @@ function App() {
     return applications.filter(app => {
       const matchesSearch = 
         app.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.position.toLowerCase().includes(searchTerm.toLowerCase());
+        app.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.category?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
       return matchesSearch && matchesStatus;
     });

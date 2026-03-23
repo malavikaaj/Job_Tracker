@@ -37,6 +37,8 @@ export const AuthScreen: React.FC = () => {
                 <input
                   required
                   type="text"
+                  name="name"
+                  autoComplete="name"
                   placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -53,6 +55,8 @@ export const AuthScreen: React.FC = () => {
               <input
                 required
                 type="email"
+                name="email"
+                autoComplete="email"
                 placeholder="john@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -68,6 +72,8 @@ export const AuthScreen: React.FC = () => {
               <input
                 required
                 type="password"
+                name="password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 placeholder="••••••••"
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
               />
